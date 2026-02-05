@@ -1,46 +1,90 @@
 /**
  * Custom Categories Screen - Add, edit, and delete custom word categories
+ * Uses React Native Paper with Material You design
  */
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import type { Category } from '@/data/game-data';
+import { type Category as CategoryType } from '@/data/game-data';
 import { useCustomCategories } from '@/hooks/use-custom-categories';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
+  ActivityIndicator,
+  Appbar,
+  Avatar,
+  Button,
+  Card,
+  Dialog,
+  FAB,
+  Portal,
+  Surface,
+  Text,
   TextInput,
-  View,
-} from 'react-native';
+  useTheme
+} from 'react-native-paper';
+
+// Helper to map icons if needed, or import from a shared location.
+// Since I defined it locally in index.tsx, I should arguably move it to a shared constant or dup it here.
+// For now I will mock a simple icon mapper or just use a default.
+const categoryIconMap: Record<string, string> = {
+  '🍔': 'food',
+  '⚽': 'soccer',
+  '🎬': 'movie-open',
+  '🎵': 'music',
+  '🐕': 'dog',
+  '🏛️': 'city',
+  '🚗': 'car',
+  '📚': 'book',
+  '💼': 'briefcase',
+  '🎮': 'gamepad-variant',
+  '🌍': 'earth',
+  '🧪': 'flask',
+};
+
+function getCategoryIcon(emoji: string): string {
+  return categoryIconMap[emoji] || 'tag';
+}
 
 export default function CategoriesScreen() {
-  const tint = useThemeColor({}, 'tint');
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-
+  const theme = useTheme();
   const { customCategories, addCategory, updateCategory, removeCategory, isLoading } = useCustomCategories();
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<CategoryType | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [wordsText, setWordsText] = useState('');
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryType | null>(null);
 
-  useEffect(() => {
-    if (editingCategory) {
-      setCategoryName(editingCategory.name);
-      setWordsText(editingCategory.words.join('\n'));
+  const showModal = (category?: CategoryType) => {
+    if (category) {
+      setEditingCategory(category);
+      setCategoryName(category.name);
+      setWordsText(category.words.join('\n'));
     } else {
+      setEditingCategory(null);
       setCategoryName('');
       setWordsText('');
     }
-  }, [editingCategory]);
+    setVisible(true);
+  };
+
+  const hideModal = () => {
+    setVisible(false);
+    setEditingCategory(null);
+  };
+
+  const confirmDelete = (category: CategoryType) => {
+    setCategoryToDelete(category);
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDelete = async () => {
+    if (categoryToDelete) {
+      await removeCategory(categoryToDelete.id);
+      setDeleteDialogVisible(false);
+      setCategoryToDelete(null);
+    }
+  };
 
   const handleSave = async () => {
     const name = categoryName.trim();
@@ -50,12 +94,14 @@ export default function CategoriesScreen() {
       .filter(w => w.length > 0);
 
     if (!name) {
-      Alert.alert('Error', 'Please enter a category name');
+      // Keep it simple for now, generic alert or set error state
+      // Using a simple blocking alert is fine, or better use a HelperText if I implemented validation state
+      alert('Please enter a category name');
       return;
     }
 
     if (words.length < 5) {
-      Alert.alert('Error', 'Please enter at least 5 words (one per line)');
+      alert('Please enter at least 5 words');
       return;
     }
 
@@ -65,170 +111,137 @@ export default function CategoriesScreen() {
       await addCategory(name, words);
     }
 
-    setShowModal(false);
-    setEditingCategory(null);
-  };
-
-  const handleDelete = (category: Category) => {
-    Alert.alert(
-      'Delete Category',
-      `Are you sure you want to delete "${category.name}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => removeCategory(category.id),
-        },
-      ]
-    );
-  };
-
-  const openAddModal = () => {
-    setEditingCategory(null);
-    setShowModal(true);
-  };
-
-  const openEditModal = (category: Category) => {
-    setEditingCategory(category);
-    setShowModal(true);
+    hideModal();
   };
 
   if (isLoading) {
     return (
-      <ThemedView style={[styles.container, styles.centered]}>
-        <ThemedText>Loading...</ThemedText>
-      </ThemedView>
+      <Surface style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 16 }}>Loading categories...</Text>
+      </Surface>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <Surface style={styles.container}>
+      <Appbar.Header elevated>
+        <Appbar.Content title="Custom Categories" />
+      </Appbar.Header>
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ThemedText style={styles.title}>✨ Custom Categories</ThemedText>
-        <ThemedText style={styles.subtitle}>
-          Create your own word categories for the game
-        </ThemedText>
-
         {customCategories.length === 0 ? (
           <View style={styles.emptyState}>
-            <ThemedText style={styles.emptyEmoji}>📝</ThemedText>
-            <ThemedText style={styles.emptyText}>
-              No custom categories yet.{'\n'}Tap the button below to create one!
-            </ThemedText>
+            <Avatar.Icon
+              size={80}
+              icon="playlist-edit"
+              style={{ backgroundColor: theme.colors.surfaceVariant }}
+            />
+            <Text variant="titleLarge" style={styles.emptyTitle}>
+              No Custom Categories
+            </Text>
+            <Text variant="bodyLarge" style={styles.emptyText}>
+              Create your own word lists to play with!
+            </Text>
           </View>
         ) : (
-          <View style={styles.categoriesList}>
+          <View style={styles.grid}>
             {customCategories.map((category) => (
-              <View
-                key={category.id}
-                style={[styles.categoryItem, { borderColor: tint }]}
-              >
-                <View style={styles.categoryInfo}>
-                  <ThemedText style={styles.categoryName}>
-                    {category.icon} {category.name}
-                  </ThemedText>
-                  <ThemedText style={styles.wordCount}>
+              <Card key={category.id} style={styles.card} mode="elevated">
+                <Card.Content>
+                  <View style={styles.cardHeader}>
+                    <Avatar.Icon
+                      size={48}
+                      icon={getCategoryIcon(category.icon)}
+                      style={{ backgroundColor: theme.colors.tertiaryContainer }}
+                    />
+                  </View>
+                  <Text variant="titleMedium" style={styles.categoryName} numberOfLines={1}>
+                    {category.name}
+                  </Text>
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
                     {category.words.length} words
-                  </ThemedText>
-                </View>
-                <View style={styles.categoryActions}>
-                  <Pressable
-                    style={[styles.actionButton, { borderColor: tint }]}
-                    onPress={() => openEditModal(category)}
+                  </Text>
+                </Card.Content>
+                <Card.Actions>
+                  <Button onPress={() => showModal(category)}>Edit</Button>
+                  <Button
+                    mode="contained"
+                    buttonColor="#D32F2F"
+                    textColor="white"
+                    icon="delete"
+                    onPress={() => confirmDelete(category)}
                   >
-                    <ThemedText style={[styles.actionText, { color: tint }]}>Edit</ThemedText>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.actionButton, { borderColor: '#e74c3c' }]}
-                    onPress={() => handleDelete(category)}
-                  >
-                    <ThemedText style={[styles.actionText, { color: '#e74c3c' }]}>Delete</ThemedText>
-                  </Pressable>
-                </View>
-              </View>
+                    Delete
+                  </Button>
+                </Card.Actions>
+              </Card>
             ))}
           </View>
         )}
-
-        <View style={{ height: 100 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* Add Button */}
-      <View style={styles.buttonContainer}>
-        <Pressable
-          style={[styles.addButton, { backgroundColor: tint }]}
-          onPress={openAddModal}
-        >
-          <ThemedText style={styles.addButtonText} lightColor="#fff" darkColor="#fff">
-            + Add New Category
-          </ThemedText>
-        </Pressable>
-      </View>
+      <FAB
+        icon="plus"
+        label="Create Category"
+        style={styles.fab}
+        onPress={() => showModal()}
+      />
 
-      {/* Add/Edit Modal */}
-      <Modal
-        visible={showModal}
-        animationType="slide"
-        transparent
-      >
-        <KeyboardAvoidingView
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={[styles.modalContent, { backgroundColor }]}>
-            <ThemedText style={styles.modalTitle}>
-              {editingCategory ? 'Edit Category' : 'New Category'}
-            </ThemedText>
+      {/* Edit/Create Dialog */}
+      <Portal>
+        <Dialog visible={visible} onDismiss={hideModal} style={{ maxHeight: '80%' }}>
+          <Dialog.Title>{editingCategory ? 'Edit Category' : 'New Category'}</Dialog.Title>
+          <Dialog.ScrollArea>
+            <ScrollView contentContainerStyle={{ paddingVertical: 10 }}>
+              <TextInput
+                label="Category Name"
+                value={categoryName}
+                onChangeText={setCategoryName}
+                mode="outlined"
+                style={styles.input}
+              />
+              <TextInput
+                label="Words (one per line)"
+                value={wordsText}
+                onChangeText={setWordsText}
+                mode="outlined"
+                multiline
+                numberOfLines={8}
+                placeholder="Word 1&#10;Word 2&#10;Word 3&#10;Word 4&#10;Word 5"
+                style={styles.textArea}
+              />
+              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                Minimum 5 words required.
+              </Text>
+            </ScrollView>
+          </Dialog.ScrollArea>
+          <Dialog.Actions>
+            <Button onPress={hideModal}>Cancel</Button>
+            <Button mode="contained" onPress={handleSave}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
 
-            <ThemedText style={styles.inputLabel}>Category Name</ThemedText>
-            <TextInput
-              style={[styles.input, { color: textColor, borderColor: tint }]}
-              value={categoryName}
-              onChangeText={setCategoryName}
-              placeholder="e.g., TV Shows"
-              placeholderTextColor="rgba(128,128,128,0.5)"
-            />
-
-            <ThemedText style={styles.inputLabel}>Words (one per line, minimum 5)</ThemedText>
-            <TextInput
-              style={[styles.textArea, { color: textColor, borderColor: tint }]}
-              value={wordsText}
-              onChangeText={setWordsText}
-              placeholder={"Breaking Bad\nFriends\nThe Office\nGame of Thrones\nStranger Things"}
-              placeholderTextColor="rgba(128,128,128,0.5)"
-              multiline
-              numberOfLines={8}
-              textAlignVertical="top"
-            />
-
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setShowModal(false);
-                  setEditingCategory(null);
-                }}
-              >
-                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-              </Pressable>
-              <Pressable
-                style={[styles.modalButton, { backgroundColor: tint }]}
-                onPress={handleSave}
-              >
-                <ThemedText style={styles.saveButtonText} lightColor="#fff" darkColor="#fff">
-                  Save
-                </ThemedText>
-              </Pressable>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </ThemedView>
+        {/* Delete Confirmation Dialog */}
+        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+          <Dialog.Title>Delete Category?</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium">
+              Are you sure you want to delete "{categoryToDelete?.name}"? This action cannot be undone.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
+            <Button textColor={theme.colors.error} onPress={handleDelete}>Delete</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+    </Surface>
   );
 }
 
@@ -244,145 +257,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 20,
-    paddingTop: 60,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    textAlign: 'center',
-    marginBottom: 32,
+    padding: 16,
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 60,
+    justifyContent: 'center',
+    marginTop: 60,
   },
-  emptyEmoji: {
-    fontSize: 64,
-    marginBottom: 16,
+  emptyTitle: {
+    marginTop: 16,
+    fontWeight: 'bold',
   },
   emptyText: {
-    fontSize: 16,
-    opacity: 0.6,
+    marginTop: 8,
     textAlign: 'center',
-    lineHeight: 24,
-  },
-  categoriesList: {
-    gap: 12,
-  },
-  categoryItem: {
-    borderWidth: 2,
-    borderRadius: 12,
-    padding: 16,
-  },
-  categoryInfo: {
-    marginBottom: 12,
-  },
-  categoryName: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  wordCount: {
-    fontSize: 14,
-    opacity: 0.6,
-  },
-  categoryActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    paddingBottom: 34,
-  },
-  addButton: {
-    paddingVertical: 18,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
     opacity: 0.7,
   },
+  grid: {
+    gap: 16,
+  },
+  card: {
+    marginBottom: 8,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  categoryName: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 0,
+  },
   input: {
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   textArea: {
-    borderWidth: 2,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 24,
-    height: 160,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: 'rgba(128,128,128,0.2)',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    marginBottom: 8,
+    minHeight: 120, // ensure enough visual space
   },
 });

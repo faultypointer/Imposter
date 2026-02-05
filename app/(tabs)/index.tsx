@@ -1,46 +1,82 @@
 /**
- * Lobby Screen - Manage players and settings
+ * Lobby Screen - Category selection and game setup
+ * Now uses React Native Paper with Material You design
  */
 
-import { CategoryCard } from '@/components/category-card';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useGame } from '@/contexts/game-context';
+import { GamePhase, useGame } from '@/contexts/game-context';
 import { PREDEFINED_CATEGORIES } from '@/data/game-data';
 import { useCustomCategories } from '@/hooks/use-custom-categories';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Redirect, router } from 'expo-router';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Avatar,
+  Card,
+  Chip,
+  FAB,
+  IconButton,
+  Surface,
+  Text,
+  useTheme
+} from 'react-native-paper';
+
+// Map category icons to Material icons
+const categoryIconMap: Record<string, string> = {
+  '🍔': 'food',
+  '⚽': 'soccer',
+  '🎬': 'movie-open',
+  '🎵': 'music',
+  '🐕': 'dog',
+  '🏛️': 'city',
+  '🚗': 'car',
+  '📚': 'book',
+  '💼': 'briefcase',
+  '🎮': 'gamepad-variant',
+  '🌍': 'earth',
+  '🧪': 'flask',
+};
+
+function getCategoryIcon(emoji: string): string {
+  return categoryIconMap[emoji] || 'tag';
+}
 
 export default function LobbyScreen() {
-  const tint = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
-  const textColor = useThemeColor({}, 'text');
-
+  const theme = useTheme();
   const {
     players,
-    addPlayer,
-    removePlayer,
-    updatePlayerName,
     selectedCategories,
     toggleCategory,
-    randomizeStartingPlayer,
-    setRandomizeStartingPlayer,
     startGame,
+    phase,
+    imposterCount,
+    imposterWordMode,
   } = useGame();
 
   const { customCategories } = useCustomCategories();
   const allCategories = [...PREDEFINED_CATEGORIES, ...customCategories];
 
+  // Redirect to player setup if no players
+  if (phase === GamePhase.PLAYER_SETUP || players.length === 0) {
+    return <Redirect href="/player-setup" />;
+  }
+
   const handleStartGame = () => {
-    if (selectedCategories.length === 0) return;
+    if (selectedCategories.length === 0 || players.length < 3) return;
     startGame();
     router.push('/reveal');
   };
 
+  const canStartGame = selectedCategories.length > 0 && players.length >= 3;
+
+  const getModeLabel = () => {
+    switch (imposterWordMode) {
+      case 'different_word': return 'Different word';
+      case 'no_word': return 'No word shown';
+      case 'same_word': return 'Same word';
+    }
+  };
+
   return (
-    <ThemedView style={styles.container}>
+    <Surface style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -48,109 +84,155 @@ export default function LobbyScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <ThemedText style={styles.title}>🕵️ Game Lobby</ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Setup players and categories
-          </ThemedText>
+          <Text variant="headlineLarge" style={styles.title}>
+            Game Lobby
+          </Text>
+          <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+            Select categories to play
+          </Text>
         </View>
 
-        {/* Player List */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Players ({players.length})</ThemedText>
-            {players.length < 12 && (
-              <Pressable onPress={() => addPlayer('')} style={styles.addButton}>
-                <Ionicons name="add-circle" size={24} color={tint} />
-                <ThemedText style={[styles.addButtonText, { color: tint }]}>Add</ThemedText>
-              </Pressable>
-            )}
-          </View>
-
-          <View style={styles.playerList}>
-            {players.map((player, index) => (
-              <View key={player.id} style={styles.playerRow}>
-                <View style={styles.playerAvatar}>
-                  <ThemedText style={styles.avatarText}>
-                    {player.name.charAt(0).toUpperCase() || '?'}
-                  </ThemedText>
-                </View>
-                <TextInput
-                  style={[styles.nameInput, { color: textColor }]}
-                  value={player.name}
-                  onChangeText={(text) => updatePlayerName(player.id, text)}
-                  placeholder={`Player ${index + 1}`}
-                  placeholderTextColor={iconColor}
-                />
+        {/* Players Summary Card */}
+        <Card style={styles.card} mode="elevated" onPress={() => router.push('/player-setup')}>
+          <Card.Content style={styles.playerSummary}>
+            <View style={styles.playerSummaryLeft}>
+              <View style={styles.avatarStack}>
+                {players.slice(0, 3).map((player, index) => (
+                  <Avatar.Text
+                    key={player.id}
+                    size={36}
+                    label={player.name.charAt(0).toUpperCase()}
+                    style={[
+                      styles.stackedAvatar,
+                      { marginLeft: index * -12 }
+                    ]}
+                  />
+                ))}
                 {players.length > 3 && (
-                  <Pressable onPress={() => removePlayer(player.id)} style={styles.removeButton}>
-                    <Ionicons name="close-circle-outline" size={22} color="#ff4444" />
-                  </Pressable>
+                  <Avatar.Text
+                    size={36}
+                    label={`+${players.length - 3}`}
+                    style={[styles.stackedAvatar, { marginLeft: -12 }]}
+                    labelStyle={{ fontSize: 12 }}
+                  />
                 )}
               </View>
-            ))}
-          </View>
-        </View>
+              <View style={styles.playerInfo}>
+                <Text variant="titleMedium">{players.length} Players</Text>
+                <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                  Tap to manage
+                </Text>
+              </View>
+            </View>
+            <IconButton icon="chevron-right" />
+          </Card.Content>
+        </Card>
 
-        {/* Settings */}
-        <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Settings</ThemedText>
-          <View style={[styles.settingRow, { borderColor: 'rgba(128,128,128,0.2)' }]}>
-            <ThemedText style={styles.settingLabel}>Randomize Starting Player</ThemedText>
-            <Switch
-              value={randomizeStartingPlayer}
-              onValueChange={setRandomizeStartingPlayer}
-              trackColor={{ false: '#767577', true: tint }}
-              thumbColor="#fff"
-            />
-          </View>
-        </View>
+        {/* Game Settings Card */}
+        <Card style={styles.card} mode="outlined" onPress={() => router.push('/settings')}>
+          <Card.Content>
+            <View style={styles.settingsRow}>
+              <Avatar.Icon
+                size={40}
+                icon="cog"
+                style={{ backgroundColor: theme.colors.secondaryContainer }}
+              />
+              <View style={styles.settingsInfo}>
+                <Text variant="titleMedium">Game Settings</Text>
+                <View style={styles.settingsChips}>
+                  <Chip compact icon="account-eye" style={styles.chip}>
+                    {imposterCount} {imposterCount === 1 ? 'Imposter' : 'Imposters'}
+                  </Chip>
+                  <Chip compact icon="eye" style={styles.chip}>
+                    {getModeLabel()}
+                  </Chip>
+                </View>
+              </View>
+              <IconButton icon="chevron-right" />
+            </View>
+          </Card.Content>
+        </Card>
 
         {/* Category Selection */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Categories</ThemedText>
+            <Text variant="titleMedium">Categories</Text>
             {selectedCategories.length > 0 && (
-              <View style={[styles.selectionBadge, { backgroundColor: tint }]}>
-                <ThemedText style={styles.selectionBadgeText} lightColor="#fff" darkColor="#fff">
-                  {selectedCategories.length} selected
-                </ThemedText>
-              </View>
+              <Chip icon="check-circle" mode="flat">
+                {selectedCategories.length} selected
+              </Chip>
             )}
           </View>
 
           <View style={styles.categoryGrid}>
-            {allCategories.map((category) => (
-              <CategoryCard
-                key={category.id}
-                category={category}
-                isSelected={selectedCategories.some(c => c.id === category.id)}
-                onPress={toggleCategory}
-              />
-            ))}
+            {allCategories.map((category) => {
+              const isSelected = selectedCategories.some(c => c.id === category.id);
+              return (
+                <Card
+                  key={category.id}
+                  style={[
+                    styles.categoryCard,
+                    isSelected && {
+                      borderColor: theme.colors.primary,
+                      borderWidth: 2,
+                    }
+                  ]}
+                  mode={isSelected ? 'elevated' : 'outlined'}
+                  onPress={() => toggleCategory(category)}
+                >
+                  <Card.Content style={styles.categoryContent}>
+                    <Avatar.Icon
+                      size={48}
+                      icon={getCategoryIcon(category.icon)}
+                      style={{
+                        backgroundColor: isSelected
+                          ? theme.colors.primaryContainer
+                          : theme.colors.surfaceVariant
+                      }}
+                    />
+                    <Text
+                      variant="labelLarge"
+                      style={[
+                        styles.categoryName,
+                        isSelected && { color: theme.colors.primary }
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {category.name}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={{ color: theme.colors.onSurfaceVariant }}
+                    >
+                      {category.words.length} words
+                    </Text>
+                    {category.isCustom && (
+                      <Chip compact style={styles.customBadge}>
+                        Custom
+                      </Chip>
+                    )}
+                  </Card.Content>
+                </Card>
+              );
+            })}
           </View>
         </View>
 
-        {/* Spacer */}
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Start Button */}
-      <View style={styles.buttonContainer}>
-        <Pressable
-          style={[
-            styles.startButton,
-            { backgroundColor: tint },
-            selectedCategories.length === 0 && styles.buttonDisabled,
-          ]}
-          onPress={handleStartGame}
-          disabled={selectedCategories.length === 0}
-        >
-          <ThemedText style={styles.startButtonText} lightColor="#fff" darkColor="#fff">
-            Start Game
-          </ThemedText>
-        </Pressable>
-      </View>
-    </ThemedView>
+      {/* Start Game FAB */}
+      <FAB
+        icon="play"
+        label="Start Game"
+        style={[
+          styles.fab,
+          !canStartGame && { backgroundColor: theme.colors.surfaceDisabled }
+        ]}
+        onPress={handleStartGame}
+        disabled={!canStartGame}
+      />
+    </Surface>
   );
 }
 
@@ -166,121 +248,85 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   header: {
-    alignItems: 'center',
     marginBottom: 24,
   },
   title: {
-    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
+  card: {
+    marginBottom: 16,
+  },
+  playerSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  playerSummaryLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarStack: {
+    flexDirection: 'row',
+    marginRight: 12,
+  },
+  stackedAvatar: {
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  playerInfo: {
+    marginLeft: 8,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  settingsInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  settingsChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 4,
+    gap: 4,
+  },
+  chip: {
+    height: 28,
   },
   section: {
-    marginBottom: 24,
+    marginTop: 8,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  playerList: {
-    gap: 12,
-  },
-  playerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(128,128,128,0.1)',
-    borderRadius: 12,
-    padding: 12,
-  },
-  playerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(150,150,150,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  nameInput: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  removeButton: {
-    padding: 4,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  settingLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  selectionBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  selectionBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    marginBottom: 16,
   },
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    rowGap: 12,
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    paddingBottom: 34,
+  categoryCard: {
+    width: '48%',
   },
-  startButton: {
-    paddingVertical: 18,
-    borderRadius: 16,
+  categoryContent: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    paddingVertical: 16,
   },
-  buttonDisabled: {
-    opacity: 0.4,
+  categoryName: {
+    marginTop: 8,
+    textAlign: 'center',
   },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
+  customBadge: {
+    marginTop: 8,
+  },
+  fab: {
+    position: 'absolute',
+    margin: 16,
+    right: 0,
+    bottom: 24,
   },
 });
-

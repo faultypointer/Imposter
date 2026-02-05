@@ -1,9 +1,18 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Theme configuration for the app using React Native Paper MD3
+ * Provides Material You theming with dynamic color support
  */
 
+import {
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
+} from '@react-navigation/native';
 import { Platform } from 'react-native';
+import {
+  MD3DarkTheme,
+  MD3LightTheme,
+  adaptNavigationTheme,
+} from 'react-native-paper';
 
 const tintColorLight = '#6366f1';
 const tintColorDark = '#818cf8';
@@ -57,3 +66,77 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+// Adapt navigation themes for Paper integration
+const { LightTheme: AdaptedLightTheme, DarkTheme: AdaptedDarkTheme } =
+  adaptNavigationTheme({
+    reactNavigationLight: NavigationDefaultTheme,
+    reactNavigationDark: NavigationDarkTheme,
+  });
+
+// MD3 Light Theme with custom colors
+export const PaperLightTheme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: tintColorLight,
+    primaryContainer: '#E8E5FF',
+    secondary: '#625B71',
+    secondaryContainer: '#E8DEF8',
+    tertiary: '#7D5260',
+    tertiaryContainer: '#FFD8E4',
+    error: '#B3261E',
+    errorContainer: '#F9DEDC',
+    surface: Colors.light.background,
+    surfaceVariant: '#E7E0EC',
+    outline: '#79747E',
+    background: Colors.light.background,
+  },
+};
+
+// MD3 Dark Theme with custom colors
+export const PaperDarkTheme = {
+  ...MD3DarkTheme,
+  colors: {
+    ...MD3DarkTheme.colors,
+    primary: tintColorDark,
+    primaryContainer: '#4F378B',
+    secondary: '#CCC2DC',
+    secondaryContainer: '#4A4458',
+    tertiary: '#EFB8C8',
+    tertiaryContainer: '#633B48',
+    error: '#F2B8B5',
+    errorContainer: '#8C1D18',
+    surface: Colors.dark.background,
+    surfaceVariant: '#49454F',
+    outline: '#938F99',
+    background: Colors.dark.background,
+  },
+};
+
+// Navigation themes that can be used with ThemeProvider
+export const NavigationLightTheme = {
+  ...AdaptedLightTheme,
+  colors: {
+    ...AdaptedLightTheme.colors,
+    primary: tintColorLight,
+    background: Colors.light.background,
+    card: Colors.light.card,
+    text: Colors.light.text,
+    border: Colors.light.border,
+  },
+};
+
+export const NavigationDarkThemeCustom = {
+  ...AdaptedDarkTheme,
+  colors: {
+    ...AdaptedDarkTheme.colors,
+    primary: tintColorDark,
+    background: Colors.dark.background,
+    card: Colors.dark.card,
+    text: Colors.dark.text,
+    border: Colors.dark.border,
+  },
+};
+
+export type AppTheme = typeof PaperLightTheme;

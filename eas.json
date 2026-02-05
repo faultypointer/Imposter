@@ -8,25 +8,18 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": {
-        "image": "latest"
-      },
-      "ios": {
+        "buildType": "apk",
         "image": "latest"
       }
     },
     "development-simulator": {
-      "extends": "development",
-      "ios": {
-        "simulator": true
-      }
+      "extends": "development"
     },
     "preview": {
       "distribution": "internal",
       "channel": "main",
       "android": {
-        "image": "latest"
-      },
-      "ios": {
+        "buildType": "apk",
         "image": "latest"
       }
     },
@@ -34,9 +27,7 @@
       "channel": "production",
       "autoIncrement": true,
       "android": {
-        "image": "latest"
-      },
-      "ios": {
+        "buildType": "apk",
         "image": "latest"
       }
     }
