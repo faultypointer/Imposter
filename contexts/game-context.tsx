@@ -6,7 +6,10 @@ import {
     getRandomWordPair,
     type Category
 } from '@/data/game-data';
-import React, { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+
+const CUSTOM_CATEGORIES_KEY = 'imposter_custom_categories';
 
 // --- Types ---
 
@@ -37,6 +40,8 @@ interface GameState {
     randomizeStartingPlayer: boolean;
     imposterCount: number; // Number of imposters (default 1)
     imposterWordMode: ImposterWordMode; // What the imposter sees
+    customCategories: Category[];
+    isLoadingCategories: boolean;
 
     // Round state
     phase: GamePhase;
@@ -71,6 +76,9 @@ interface GameContextValue extends GameState {
     addHint: (hint: string) => void;
     resetPlayers: () => void; // Clear all players for new game
     completePlayerSetup: () => void; // Finish player entry, go to lobby
+    addCategory: (name: string, words: string[]) => Promise<Category>;
+    updateCategory: (id: string, updates: Partial<Pick<Category, 'name' | 'words'>>) => Promise<void>;
+    removeCategory: (id: string) => Promise<void>;
 
     // Game flow
     startGame: () => void;
@@ -141,6 +149,8 @@ const initialState: GameState = {
     randomizeStartingPlayer: true,
     imposterCount: 1,
     imposterWordMode: 'different_word',
+    customCategories: [],
+    isLoadingCategories: true,
 
     phase: GamePhase.PLAYER_SETUP,
     roundNumber: 1,
@@ -254,6 +264,87 @@ export function GameProvider({ children }: { children: ReactNode }) {
             ...prev,
             phase: GamePhase.SETUP
         }));
+    }, []);
+
+    // --- Category Management ---
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const stored = await AsyncStorage.getItem(CUSTOM_CATEGORIES_KEY);
+                if (stored) {
+                    setState(prev => ({
+                        ...prev,
+                        customCategories: JSON.parse(stored),
+                        isLoadingCategories: false
+                    }));
+                } else {
+                    setState(prev => ({ ...prev, isLoadingCategories: false }));
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+                setState(prev => ({ ...prev, isLoadingCategories: false }));
+            }
+        };
+        loadCategories();
+    }, []);
+
+    const saveCategories = async (categories: Category[]) => {
+        try {
+            await AsyncStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(categories));
+        } catch (error) {
+            console.error('Failed to save categories:', error);
+        }
+    };
+
+    const addCategory = useCallback(async (name: string, words: string[]) => {
+        const newCategory: Category = {
+            id: `custom_${Date.now()}`,
+            name,
+            icon: '✨',
+            words,
+            isCustom: true,
+        };
+
+        setState(prev => {
+            const updated = [...prev.customCategories, newCategory];
+            saveCategories(updated);
+            return {
+                ...prev,
+                customCategories: updated
+            };
+        });
+        return newCategory;
+    }, []);
+
+    const updateCategory = useCallback(async (id: string, updates: Partial<Pick<Category, 'name' | 'words'>>) => {
+        setState(prev => {
+            const updated = prev.customCategories.map(cat =>
+                cat.id === id ? { ...cat, ...updates } : cat
+            );
+            saveCategories(updated);
+            return {
+                ...prev,
+                customCategories: updated
+            };
+        });
+    }, []);
+
+    const removeCategory = useCallback(async (id: string) => {
+        setState(prev => {
+            const updated = prev.customCategories.filter(cat => cat.id !== id);
+            saveCategories(updated);
+
+            // Also deselect if currently selected in a game
+            const isSelected = prev.selectedCategories.some(c => c.id === id);
+            return {
+                ...prev,
+                customCategories: updated,
+                selectedCategories: isSelected
+                    ? prev.selectedCategories.filter(c => c.id !== id)
+                    : prev.selectedCategories
+            };
+        });
     }, []);
 
     // --- Game Logic ---
@@ -599,6 +690,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         addHint,
         resetPlayers,
         completePlayerSetup,
+        addCategory,
+        updateCategory,
+        removeCategory,
         startGame,
         revealWord,
         nextPlayerReveal,

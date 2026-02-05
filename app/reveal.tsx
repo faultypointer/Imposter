@@ -107,7 +107,7 @@ export default function RevealScreen() {
         : null;
 
     const handlePressIn = () => {
-        // Start a 1s timer for reveal
+        // Start a 500ms timer for reveal
         revealTimeoutRef.current = setTimeout(() => {
             rotation.value = withTiming(180, { duration: 300 });
             revealWord(actualPlayerIndex);
@@ -115,11 +115,11 @@ export default function RevealScreen() {
             // Trigger haptic feedback
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             revealTimeoutRef.current = null;
-        }, 1000);
+        }, 500);
     };
 
     const handlePressOut = () => {
-        // Clear timeout if released before 1s
+        // Clear timeout if released before 500ms
         if (revealTimeoutRef.current) {
             clearTimeout(revealTimeoutRef.current);
             revealTimeoutRef.current = null;

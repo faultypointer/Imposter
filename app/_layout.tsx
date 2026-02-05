@@ -56,7 +56,7 @@ export default function RootLayout() {
             <Stack.Screen
               name="settings"
               options={{
-                title: 'Game Settings',
+                headerShown: false,
                 presentation: 'modal',
               }}
             />
@@ -76,7 +76,6 @@ export default function RootLayout() {
                 gestureEnabled: false,
               }}
             />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
           <StatusBar style="auto" />
         </GameProvider>

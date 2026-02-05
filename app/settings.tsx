@@ -41,6 +41,17 @@ export default function SettingsScreen() {
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
             >
+                {/* Header */}
+                <View style={styles.header}>
+                    <View style={styles.headerTop}>
+                        <Text variant="headlineLarge" style={styles.title}>
+                            Settings
+                        </Text>
+                    </View>
+                    <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+                        Configure your game experience
+                    </Text>
+                </View>
                 {/* Imposter Word Mode Section */}
                 <List.Section>
                     <List.Subheader>Imposter Word Display</List.Subheader>
@@ -162,7 +173,23 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingTop: 16,
+        padding: 20,
+        paddingTop: 60,
+    },
+    header: {
+        marginBottom: 24,
+    },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    title: {
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    closeButton: {
+        margin: 0,
     },
     sectionDivider: {
         marginVertical: 8,

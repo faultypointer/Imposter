@@ -6,7 +6,7 @@
 import { GamePhase, useGame } from '@/contexts/game-context';
 import { router, useRootNavigationState } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { LayoutAnimation, Platform, ScrollView, StyleSheet, UIManager, View } from 'react-native';
+import { LayoutAnimation, ScrollView, StyleSheet, View } from 'react-native';
 import {
     Avatar,
     Button,
@@ -20,9 +20,7 @@ import {
     useTheme
 } from 'react-native-paper';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+// UIManager setup removed to prevent no-op warnings in New Architecture
 
 export default function GameScreen() {
     const { phase } = useGame();
