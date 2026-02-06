@@ -81,7 +81,7 @@ export default function LobbyScreen() {
 
     if (selectedCategories.length === 0 || players.length < 3) return;
     startGame();
-    router.push('/reveal');
+    router.push('/game');
   };
 
   const handleManagePlayers = () => {
@@ -98,9 +98,10 @@ export default function LobbyScreen() {
 
   const getModeLabel = () => {
     switch (imposterWordMode) {
-      case 'different_word': return 'Different word';
-      case 'no_word': return 'No word shown';
-      case 'hint_mode': return 'Hint Round';
+      case 'hidden': return 'Hidden Imposter';
+      case 'no_hint': return 'No Hints';
+      case 'category_hint': return 'With Hint';
+      case 'user_hint': return 'From Players';
       default: return 'Standard';
     }
   };

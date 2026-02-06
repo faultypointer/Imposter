@@ -55,7 +55,7 @@ export default function PlayerSetupScreen() {
         if (players.length >= 3) {
             if (selectedCategories.length > 0) {
                 startGame();
-                router.replace('/reveal');
+                router.replace('/game');
             } else {
                 completePlayerSetup();
                 router.replace('/(tabs)');
