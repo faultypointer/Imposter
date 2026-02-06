@@ -493,7 +493,7 @@ export default function RevealScreen() {
                         >
                             {isLastPlayer
                                 ? isHintPhase
-                                    ? 'Reveal Results'
+                                    ? 'Start Discussion'
                                     : imposterWordMode === 'hint_mode'
                                         ? 'Go to Hint Round'
                                         : 'Start Match'

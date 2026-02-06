@@ -67,9 +67,15 @@ export default function SettingsScreen() {
                                 title="Show Different Word"
                                 titleStyle={{ fontWeight: '600' }}
                                 description="Imposter sees a related but different word"
-                                left={props => <List.Icon {...props} icon="eye-outline" />}
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="eye-outline" />
+                                    </View>
+                                )}
                                 right={() => (
-                                    <RadioButton value="different_word" />
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="different_word" />
+                                    </View>
                                 )}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -81,9 +87,15 @@ export default function SettingsScreen() {
                                 title="Show No Word"
                                 titleStyle={{ fontWeight: '600' }}
                                 description="Imposter only knows they are the imposter"
-                                left={props => <List.Icon {...props} icon="eye-off-outline" />}
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="eye-off-outline" />
+                                    </View>
+                                )}
                                 right={() => (
-                                    <RadioButton value="no_word" />
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="no_word" />
+                                    </View>
                                 )}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -95,9 +107,15 @@ export default function SettingsScreen() {
                                 title="Show with Hint"
                                 titleStyle={{ fontWeight: '600' }}
                                 description="Imposter sees title with a hint from a Townie"
-                                left={props => <List.Icon {...props} icon="lightbulb-outline" />}
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="lightbulb-outline" />
+                                    </View>
+                                )}
                                 right={() => (
-                                    <RadioButton value="hint_mode" />
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="hint_mode" />
+                                    </View>
                                 )}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -160,7 +178,11 @@ export default function SettingsScreen() {
                             title="Randomize Starting Player"
                             description="Randomly pick who speaks first each round"
                             titleStyle={{ fontWeight: '600' }}
-                            left={props => <List.Icon {...props} icon="shuffle" />}
+                            left={props => (
+                                <View style={{ justifyContent: 'center' }}>
+                                    <List.Icon {...props} icon="shuffle" />
+                                </View>
+                            )}
                             right={() => (
                                 <Switch
                                     value={randomizeStartingPlayer}
