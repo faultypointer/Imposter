@@ -3,6 +3,7 @@
  * Uses React Native Paper with pass-the-phone voting
  */
 
+import { Layout } from '@/constants/theme';
 import { GamePhase, useGame } from '@/contexts/game-context';
 import { router, useRootNavigationState } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -17,7 +18,7 @@ import {
     ProgressBar,
     Surface,
     Text,
-    useTheme
+    useTheme,
 } from 'react-native-paper';
 
 // UIManager setup removed to prevent no-op warnings in New Architecture
@@ -41,11 +42,11 @@ export default function GameScreen() {
     }, [phase, rootNavigationState?.key]);
 
     return (
-        <Surface style={styles.container}>
+        <View style={styles.container}>
             {phase === GamePhase.DISCUSSION && <DiscussionView />}
             {phase === GamePhase.VOTING && <VotingView />}
             {phase === GamePhase.RESULTS && <ResultsView />}
-        </Surface>
+        </View>
     );
 }
 
@@ -136,17 +137,18 @@ function DiscussionView() {
                 </Card>
             </ScrollView>
 
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={startDiscussion}
                     style={styles.actionButton}
                     contentStyle={styles.buttonContent}
+                    labelStyle={styles.actionButtonLabel}
                     icon="vote"
                 >
                     Start Voting
                 </Button>
-            </Surface>
+            </View>
         </View>
     );
 }
@@ -220,8 +222,14 @@ function VotingView() {
                         <Button
                             mode="contained"
                             onPress={handlePassPhone}
-                            style={{ marginTop: 32, width: '100%' }}
+                            style={{
+                                marginTop: 32,
+                                width: '100%',
+                                height: Layout.floatingBar.height,
+                                borderRadius: Layout.floatingBar.borderRadius,
+                            }}
                             contentStyle={styles.buttonContent}
+                            labelStyle={styles.actionButtonLabel}
                             icon="account-arrow-right"
                         >
                             I am {currentVoter.name}
@@ -310,13 +318,14 @@ function VotingView() {
             </ScrollView>
 
             {/* Submit Vote Button */}
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={handleVote}
                     disabled={!selectedTarget}
                     style={styles.actionButton}
                     contentStyle={styles.buttonContent}
+                    labelStyle={styles.actionButtonLabel}
                     icon="check-circle"
                 >
                     {isLastVoter
@@ -324,7 +333,7 @@ function VotingView() {
                         : `Confirm & Pass to ${nextVoterName}`
                     }
                 </Button>
-            </Surface>
+            </View>
         </View>
     );
 }
@@ -469,12 +478,13 @@ function ResultsView() {
             </ScrollView>
 
             {/* Action Buttons */}
-            <Surface style={styles.buttonRow} elevation={4}>
+            <View style={styles.buttonRow}>
                 <Button
                     mode="outlined"
                     onPress={endGame}
                     style={styles.halfButton}
                     contentStyle={styles.buttonContent}
+                    labelStyle={styles.halfButtonLabel}
                     icon="stop"
                 >
                     End Game
@@ -487,11 +497,12 @@ function ResultsView() {
                     }}
                     style={styles.halfButton}
                     contentStyle={styles.buttonContent}
+                    labelStyle={styles.halfButtonLabel}
                     icon="arrow-right"
                 >
                     Next Round
                 </Button>
-            </Surface>
+            </View>
         </View>
     );
 }
@@ -616,30 +627,59 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
+        borderRadius: Layout.floatingBar.borderRadius,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     buttonRow: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
         flexDirection: 'row',
         gap: 12,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     actionButton: {
-        borderRadius: 12,
+        flex: 1,
+        borderRadius: Layout.floatingBar.borderRadius,
+        height: '100%',
+        justifyContent: 'center',
     },
     halfButton: {
         flex: 1,
-        borderRadius: 12,
+        borderRadius: Layout.floatingBar.borderRadius,
+        height: '100%',
+        justifyContent: 'center',
+    },
+    actionButtonLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.25,
+    },
+    halfButtonLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.25,
     },
     buttonContent: {
-        paddingVertical: 8,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
     },
 });

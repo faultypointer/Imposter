@@ -13,7 +13,6 @@ import {
   Chip,
   FAB,
   IconButton,
-  Surface,
   Text,
   useTheme
 } from 'react-native-paper';
@@ -98,7 +97,7 @@ export default function LobbyScreen() {
   };
 
   return (
-    <Surface style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -276,7 +275,7 @@ export default function LobbyScreen() {
           disabled={!isGameActive && !canStartGame}
         />
       </View>
-    </Surface>
+    </View>
   );
 }
 
@@ -369,8 +368,8 @@ const styles = StyleSheet.create({
   },
   fabContainer: {
     position: 'absolute',
-    right: 16,
-    bottom: 24,
+    right: 20,
+    bottom: 110,
     alignItems: 'flex-end',
     gap: 12,
   },

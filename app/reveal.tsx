@@ -3,6 +3,7 @@
  * Uses Reanimated for flash card flip animation
  */
 
+import { Layout } from '@/constants/theme';
 import { GamePhase, useGame } from '@/contexts/game-context';
 import * as Haptics from 'expo-haptics';
 import { Redirect } from 'expo-router';
@@ -64,8 +65,27 @@ export default function RevealScreen() {
             [0, 180],
             Extrapolation.CLAMP
         );
+        const scale = interpolate(
+            rotation.value,
+            [0, 90, 180],
+            [1, 1.1, 1],
+            Extrapolation.CLAMP
+        );
+        const opacity = interpolate(
+            rotation.value,
+            [89, 90, 91],
+            [1, 0, 0],
+            Extrapolation.CLAMP
+        );
         return {
-            transform: [{ rotateY: `${rotateValue}deg` }],
+            transform: [
+                { perspective: 1200 },
+                { rotateY: `${rotateValue}deg` },
+                { scale }
+            ],
+            opacity,
+            zIndex: rotation.value < 90 ? 2 : 1,
+            elevation: rotation.value === 0 ? 4 : 0,
         };
     });
 
@@ -76,8 +96,27 @@ export default function RevealScreen() {
             [180, 360],
             Extrapolation.CLAMP
         );
+        const scale = interpolate(
+            rotation.value,
+            [0, 90, 180],
+            [1, 1.1, 1],
+            Extrapolation.CLAMP
+        );
+        const opacity = interpolate(
+            rotation.value,
+            [89, 90, 91],
+            [0, 0, 1],
+            Extrapolation.CLAMP
+        );
         return {
-            transform: [{ rotateY: `${rotateValue}deg` }],
+            transform: [
+                { perspective: 1200 },
+                { rotateY: `${rotateValue}deg` },
+                { scale }
+            ],
+            opacity,
+            zIndex: rotation.value >= 90 ? 2 : 1,
+            elevation: rotation.value === 180 ? 4 : 0,
         };
     });
 
@@ -109,7 +148,7 @@ export default function RevealScreen() {
     const handlePressIn = () => {
         // Start a 500ms timer for reveal
         revealTimeoutRef.current = setTimeout(() => {
-            rotation.value = withTiming(180, { duration: 300 });
+            rotation.value = withTiming(180, { duration: 400 });
             revealWord(actualPlayerIndex);
 
             // Trigger haptic feedback
@@ -125,7 +164,7 @@ export default function RevealScreen() {
             revealTimeoutRef.current = null;
         }
 
-        rotation.value = withTiming(0, { duration: 300 });
+        rotation.value = withTiming(0, { duration: 400 });
 
         // Auto-verify in Pass 1, Modal in Pass 2
         if (revealPass === 1) {
@@ -199,7 +238,7 @@ export default function RevealScreen() {
 
     if (showPassPhone) {
         return (
-            <Surface style={styles.container}>
+            <View style={styles.container}>
                 <View style={styles.passPhoneContainer}>
                     <Surface style={styles.passPhoneCard} elevation={2}>
                         <Avatar.Icon
@@ -210,9 +249,11 @@ export default function RevealScreen() {
                         <Text variant="headlineMedium" style={[styles.phaseTitle, { marginTop: 24 }]}>
                             Pass the Phone
                         </Text>
+
                         <Text variant="titleMedium" style={{ color: theme.colors.primary, marginTop: 8 }}>
                             To: {currentPlayer.name}
                         </Text>
+
                         <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginTop: 16 }}>
                             Please hand the device to the next player securely.
                         </Text>
@@ -220,15 +261,21 @@ export default function RevealScreen() {
                         <Button
                             mode="contained"
                             onPress={handlePassPhone}
-                            style={{ marginTop: 32, width: '100%' }}
+                            style={{
+                                marginTop: 32,
+                                width: '100%',
+                                height: Layout.floatingBar.height,
+                                borderRadius: Layout.floatingBar.borderRadius,
+                            }}
                             contentStyle={styles.buttonContent}
+                            labelStyle={styles.buttonLabel}
                             icon="account-arrow-right"
                         >
                             I am {currentPlayer.name}
                         </Button>
                     </Surface>
                 </View>
-            </Surface>
+            </View>
         );
     }
 
@@ -236,10 +283,10 @@ export default function RevealScreen() {
     const isHintPhase = revealPass === 2;
 
     return (
-        <Surface style={styles.container}>
+        <View style={styles.container}>
             {/* Progress Header */}
             <View style={styles.header}>
-                <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center' }}>
                     Player {currentPlayerIndex + 1} of {players.length}
                 </Text>
                 <ProgressBar
@@ -256,7 +303,7 @@ export default function RevealScreen() {
                 </Text>
                 <Text
                     variant="bodyMedium"
-                    style={[styles.instruction, { color: theme.colors.onSurfaceVariant }]}
+                    style={[styles.instruction, { color: theme.colors.onSurfaceVariant, textAlign: 'center', width: '100%' }]}
                 >
                     Tap and hold the card to reveal your secret
                 </Text>
@@ -268,14 +315,27 @@ export default function RevealScreen() {
                 >
                     {/* Front Face (Cover) */}
                     <Animated.View style={[styles.cardFace, styles.cardFront, frontAnimatedStyle]}>
-                        <Card style={styles.card} mode="elevated">
+                        <Card
+                            style={[styles.card, { backgroundColor: theme.colors.elevation.level2, borderColor: theme.colors.outlineVariant, borderWidth: 1 }]}
+                            mode="outlined"
+                        >
                             <Card.Content style={styles.cardContent}>
                                 <Avatar.Icon
-                                    size={80}
+                                    size={64}
                                     icon="fingerprint"
-                                    style={{ backgroundColor: theme.colors.primaryContainer }}
+                                    style={{ backgroundColor: theme.colors.surfaceVariant }}
+                                    color={theme.colors.primary}
                                 />
-                                <Text variant="titleLarge" style={styles.tapText}>
+                                <Text
+                                    variant="titleLarge"
+                                    style={[styles.tapText, { color: theme.colors.primary, opacity: 0.9, textAlign: 'center', width: '100%' }]}
+                                >
+                                    SECRET CARD
+                                </Text>
+                                <Text
+                                    variant="bodyMedium"
+                                    style={{ color: theme.colors.onSurfaceVariant, opacity: 0.7, marginTop: 4, textAlign: 'center', width: '100%' }}
+                                >
                                     Tap & Hold
                                 </Text>
                             </Card.Content>
@@ -287,25 +347,29 @@ export default function RevealScreen() {
                         <Card
                             style={[
                                 styles.card,
-                                isImposter && { backgroundColor: theme.colors.errorContainer }
+                                isImposter
+                                    ? { backgroundColor: theme.colors.errorContainer, borderColor: theme.colors.error }
+                                    : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant },
+                                { borderWidth: 1 }
                             ]}
-                            mode="elevated"
+                            mode="outlined"
                         >
                             <Card.Content style={styles.cardContent}>
                                 <Avatar.Icon
-                                    size={64}
+                                    size={72}
                                     icon={wordInfo.icon}
                                     style={{
                                         backgroundColor: isImposter
                                             ? theme.colors.error
-                                            : theme.colors.primary
+                                            : theme.colors.primaryContainer
                                     }}
+                                    color={isImposter ? "white" : theme.colors.primary}
                                 />
                                 <Text
-                                    variant="displaySmall"
+                                    variant="headlineMedium"
                                     style={[
                                         styles.wordText,
-                                        isImposter && imposterWordMode !== 'no_word' && { color: theme.colors.error }
+                                        isImposter ? { color: theme.colors.error } : { color: theme.colors.onSurface }
                                     ]}
                                 >
                                     {wordInfo.title}
@@ -313,10 +377,9 @@ export default function RevealScreen() {
                                 <Text
                                     variant="bodyLarge"
                                     style={{
-                                        color: isImposter
-                                            ? theme.colors.onErrorContainer
-                                            : theme.colors.onSurfaceVariant,
-                                        textAlign: 'center'
+                                        color: theme.colors.onSurfaceVariant,
+                                        textAlign: 'center',
+                                        fontWeight: '500'
                                     }}
                                 >
                                     {wordInfo.subtitle}
@@ -389,13 +452,14 @@ export default function RevealScreen() {
             </View>
 
             {/* Next Button */}
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={handleNext}
                     disabled={!isVerified}
                     style={styles.nextButton}
                     contentStyle={styles.buttonContent}
+                    labelStyle={styles.buttonLabel}
                     icon={isLastPlayer ? 'play' : 'cellphone-arrow-down'}
                 >
                     {isLastPlayer
@@ -407,8 +471,8 @@ export default function RevealScreen() {
                         : `Pass to ${players[revealOrder[currentPlayerIndex + 1]]?.name || 'Next'}`
                     }
                 </Button>
-            </Surface>
-        </Surface >
+            </View>
+        </View>
     );
 }
 
@@ -435,14 +499,17 @@ const styles = StyleSheet.create({
     playerName: {
         fontWeight: 'bold',
         marginBottom: 8,
+        textAlign: 'center',
     },
     instruction: {
-        marginBottom: 40,
+        marginBottom: 60,
+        textAlign: 'center',
     },
     cardContainer: {
         width: '100%',
         aspectRatio: 0.8,
         maxWidth: 320,
+        marginVertical: 20,
     },
     cardFace: {
         position: 'absolute',
@@ -459,35 +526,56 @@ const styles = StyleSheet.create({
     card: {
         flex: 1,
         justifyContent: 'center',
+        borderRadius: 32,
     },
     cardContent: {
         alignItems: 'center',
         padding: 24,
     },
     tapText: {
-        marginTop: 24,
+        marginTop: 16,
         fontWeight: 'bold',
-        opacity: 0.8,
+        letterSpacing: 1.5,
+        textAlign: 'center',
     },
     wordText: {
-        marginTop: 24,
+        marginTop: 20,
         marginBottom: 8,
         fontWeight: 'bold',
         textAlign: 'center',
+        textTransform: 'uppercase',
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
+        borderRadius: Layout.floatingBar.borderRadius,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     nextButton: {
-        borderRadius: 12,
+        flex: 1,
+        borderRadius: Layout.floatingBar.borderRadius,
+        height: '100%',
+        justifyContent: 'center',
     },
     buttonContent: {
-        paddingVertical: 8,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse', // Icon on the right
+    },
+    buttonLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.25,
+        textAlign: 'center',
     },
     modalContent: {
         padding: 20,

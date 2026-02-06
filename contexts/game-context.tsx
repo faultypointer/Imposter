@@ -637,6 +637,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const endGame = useCallback(() => {
         setState(prev => ({
             ...initialState,
+            customCategories: prev.customCategories,
+            isLoadingCategories: prev.isLoadingCategories,
             phase: GamePhase.SETUP, // Go to category selection, keep players
             players: prev.players.map(p => ({ ...p, score: 0, isImposter: false })),
             selectedCategories: prev.selectedCategories,
@@ -647,10 +649,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const startNewGame = useCallback(() => {
-        setState({
+        setState(prev => ({
             ...initialState,
+            customCategories: prev.customCategories,
+            isLoadingCategories: prev.isLoadingCategories,
             phase: GamePhase.PLAYER_SETUP,
-        });
+        }));
     }, []);
 
     const getPlayerWord = useCallback((playerIndex: number): string => {

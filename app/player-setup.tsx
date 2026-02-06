@@ -2,6 +2,7 @@
  * Player Setup Screen - Pass-the-phone player registration
  */
 
+import { Layout } from '@/constants/theme';
 import { GamePhase, useGame } from '@/contexts/game-context';
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
@@ -13,10 +14,9 @@ import {
     Chip,
     IconButton,
     List,
-    Surface,
     Text,
     TextInput,
-    useTheme,
+    useTheme
 } from 'react-native-paper';
 
 export default function PlayerSetupScreen() {
@@ -60,7 +60,7 @@ export default function PlayerSetupScreen() {
     }
 
     return (
-        <Surface style={styles.container}>
+        <View style={styles.container}>
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
@@ -199,13 +199,14 @@ export default function PlayerSetupScreen() {
             </ScrollView>
 
             {/* Start Game / Actions Button */}
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={isInitialSetup ? handleStartGame : () => router.back()}
                     disabled={isInitialSetup && !canStartGame}
                     style={styles.startButton}
                     contentStyle={styles.startButtonContent}
+                    labelStyle={styles.startButtonLabel}
                     icon={isInitialSetup ? "play" : "check"}
                 >
                     {isInitialSetup
@@ -213,8 +214,8 @@ export default function PlayerSetupScreen() {
                         : "Return to Lobby"
                     }
                 </Button>
-            </Surface>
-        </Surface>
+            </View>
+        </View>
     );
 }
 
@@ -270,16 +271,33 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
+        borderRadius: Layout.floatingBar.borderRadius,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     startButton: {
-        borderRadius: 12,
+        flex: 1,
+        borderRadius: Layout.floatingBar.borderRadius,
+        height: '100%',
+        justifyContent: 'center',
     },
     startButtonContent: {
-        paddingVertical: 8,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
+    },
+    startButtonLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.25,
     },
 });

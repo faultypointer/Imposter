@@ -2,6 +2,7 @@
  * Game Settings Screen - Configure imposter modes and game options
  */
 
+import { Layout } from '@/constants/theme';
 import { ImposterWordMode, useGame } from '@/contexts/game-context';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -11,10 +12,9 @@ import {
     IconButton,
     List,
     RadioButton,
-    Surface,
     Switch,
     Text,
-    useTheme,
+    useTheme
 } from 'react-native-paper';
 
 export default function SettingsScreen() {
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
     };
 
     return (
-        <Surface style={styles.container}>
+        <View style={styles.container}>
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
@@ -150,18 +150,19 @@ export default function SettingsScreen() {
             </ScrollView>
 
             {/* Done Button */}
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={() => router.back()}
                     style={styles.doneButton}
                     contentStyle={styles.doneButtonContent}
+                    labelStyle={styles.doneButtonLabel}
                     icon="check"
                 >
                     Done
                 </Button>
-            </Surface>
-        </Surface>
+            </View>
+        </View>
     );
 }
 
@@ -210,16 +211,33 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
+        borderRadius: Layout.floatingBar.borderRadius,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     doneButton: {
-        borderRadius: 12,
+        flex: 1,
+        borderRadius: Layout.floatingBar.borderRadius,
+        height: '100%',
+        justifyContent: 'center',
     },
     doneButtonContent: {
-        paddingVertical: 8,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
+    },
+    doneButtonLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.25,
     },
 });

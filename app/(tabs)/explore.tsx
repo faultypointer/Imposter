@@ -15,7 +15,6 @@ import {
   Dialog,
   FAB,
   Portal,
-  Surface,
   Text,
   TextInput,
   useTheme
@@ -121,15 +120,15 @@ export default function CategoriesScreen() {
 
   if (isLoadingCategories) {
     return (
-      <Surface style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 16 }}>Loading categories...</Text>
-      </Surface>
+      </View>
     );
   }
 
   return (
-    <Surface style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -193,7 +192,7 @@ export default function CategoriesScreen() {
             ))}
           </View>
         )}
-        <View style={{ height: 80 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       <FAB
@@ -232,8 +231,17 @@ export default function CategoriesScreen() {
             </ScrollView>
           </Dialog.ScrollArea>
           <Dialog.Actions>
-            <Button onPress={hideModal}>Cancel</Button>
-            <Button mode="contained" onPress={handleSave}>Save</Button>
+            <Button onPress={hideModal} labelStyle={styles.buttonLabel}>Cancel</Button>
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              icon="check"
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              style={{ borderRadius: 28 }}
+            >
+              Save
+            </Button>
           </Dialog.Actions>
         </Dialog>
 
@@ -246,12 +254,23 @@ export default function CategoriesScreen() {
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
-            <Button textColor={theme.colors.error} onPress={handleDelete}>Delete</Button>
+            <Button onPress={() => setDeleteDialogVisible(false)} labelStyle={styles.buttonLabel}>Cancel</Button>
+            <Button
+              mode="contained"
+              buttonColor="#D32F2F"
+              textColor="white"
+              onPress={handleDelete}
+              icon="delete"
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              style={{ borderRadius: 28 }}
+            >
+              Delete Permanently
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </Surface>
+    </View>
   );
 }
 
@@ -309,9 +328,8 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+    right: 20,
+    bottom: 110,
   },
   input: {
     marginBottom: 16,
@@ -319,5 +337,15 @@ const styles = StyleSheet.create({
   textArea: {
     marginBottom: 8,
     minHeight: 120, // ensure enough visual space
+  },
+  buttonContent: {
+    height: 48,
+    flexDirection: 'row-reverse',
+    paddingHorizontal: 16,
+  },
+  buttonLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.25,
   },
 });
