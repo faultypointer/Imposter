@@ -31,7 +31,7 @@ export enum GamePhase {
 }
 
 // Imposter word display modes
-export type ImposterWordMode = 'different_word' | 'no_word' | 'hint_mode';
+export type ImposterWordMode = 'hidden' | 'no_hint' | 'category_hint' | 'user_hint';
 
 interface GameState {
     // Game config
@@ -42,6 +42,7 @@ interface GameState {
     imposterWordMode: ImposterWordMode; // What the imposter sees
     customCategories: Category[];
     isLoadingCategories: boolean;
+    isVotingEnabled: boolean;
 
     // Round state
     phase: GamePhase;
@@ -72,6 +73,7 @@ interface GameContextValue extends GameState {
     setRandomizeStartingPlayer: (value: boolean) => void;
     setImposterCount: (count: number) => void;
     setImposterWordMode: (mode: ImposterWordMode) => void;
+    setVotingEnabled: (enabled: boolean) => void;
     setHintWord: (word: string) => void;
     addHint: (hint: string) => void;
     resetPlayers: () => void; // Clear all players for new game
@@ -148,9 +150,10 @@ const initialState: GameState = {
     selectedCategories: [],
     randomizeStartingPlayer: true,
     imposterCount: 1,
-    imposterWordMode: 'different_word',
+    imposterWordMode: 'hidden',
     customCategories: [],
     isLoadingCategories: true,
+    isVotingEnabled: true,
 
     phase: GamePhase.PLAYER_SETUP,
     roundNumber: 1,
@@ -237,6 +240,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     const setImposterWordMode = useCallback((mode: ImposterWordMode) => {
         setState(prev => ({ ...prev, imposterWordMode: mode }));
+    }, []);
+
+    const setVotingEnabled = useCallback((enabled: boolean) => {
+        setState(prev => ({ ...prev, isVotingEnabled: enabled }));
     }, []);
 
     const setHintWord = useCallback((word: string) => {
@@ -365,27 +372,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
             // 3. Create Reveal Order
             let revealOrder = secureShuffle(playerIndices);
-            const lastFirstPlayer = prev.lastFirstPlayerIndex;
-
-            // Ensure first player is NOT an imposter and NOT the same as last time if possible
-            const nonImposterIndices = playerIndices.filter(i => !imposterIndices.includes(i));
-
-            // If the first person is an imposter, swap with a random non-imposter
-            if (imposterIndices.includes(revealOrder[0])) {
-                const targetIdx = secureRandom(nonImposterIndices.length);
-                const nonImposterToSwap = nonImposterIndices[targetIdx];
-                const currentPosInReveal = revealOrder.indexOf(nonImposterToSwap);
-                [revealOrder[0], revealOrder[currentPosInReveal]] = [revealOrder[currentPosInReveal], revealOrder[0]];
-            }
-
-            // If the first person is still the same as last time, try to swap with another non-imposter
-            if (revealOrder[0] === lastFirstPlayer && nonImposterIndices.length > 1) {
-                const otherNonImposters = nonImposterIndices.filter(i => i !== lastFirstPlayer);
-                const targetIdx = secureRandom(otherNonImposters.length);
-                const swapWith = otherNonImposters[targetIdx];
-                const currentPosInReveal = revealOrder.indexOf(swapWith);
-                [revealOrder[0], revealOrder[currentPosInReveal]] = [revealOrder[currentPosInReveal], revealOrder[0]];
-            }
 
             // 4. Assign Roles
             const playersWithRoles = prev.players.map((p, i) => ({
@@ -419,7 +405,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                 playerOrder,
                 revealOrder, // Store the specific reveal order
                 lastFirstPlayerIndex: revealOrder[0], // Remember who went first
-                hintWord: null, // Reset hint
+                hintWord: prev.imposterWordMode === 'category_hint' ? randomCategory.name : null, // Set category as hint if in hint mode
             };
         });
     }, [state.selectedCategories, state.players.length, state.randomizeStartingPlayer]);
@@ -436,21 +422,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setState(prev => {
             const nextIndex = prev.currentPlayerIndex + 1;
             if (nextIndex >= prev.players.length) {
-                if (prev.revealPass === 1 && prev.imposterWordMode === 'hint_mode') {
-                    // Pass 1 finished, go to Pass 2 (Hints)
-                    // We shuffle the reveal order for pass 2 to keep things random
-                    const playerIndices = Array.from({ length: prev.players.length }, (_, i) => i);
-                    const newRevealOrder = secureShuffle(playerIndices);
-
-                    return {
-                        ...prev,
-                        revealPass: 2,
-                        currentPlayerIndex: 0,
-                        revealOrder: newRevealOrder,
-                        revealedPlayers: new Array(prev.players.length).fill(false),
-                    };
-                }
-
                 // All revealed, go to discussion
                 return {
                     ...prev,
@@ -466,11 +437,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const startDiscussion = useCallback(() => {
-        setState(prev => ({
-            ...prev,
-            phase: GamePhase.VOTING,
-            currentVoterIndex: 0
-        }));
+        setState(prev => {
+            if (!prev.isVotingEnabled) {
+                return {
+                    ...prev,
+                    phase: GamePhase.RESULTS,
+                };
+            }
+            return {
+                ...prev,
+                phase: GamePhase.VOTING,
+                currentVoterIndex: 0
+            };
+        });
     }, []);
 
     const castVote = useCallback((voterId: string, targetId: string) => {
@@ -576,27 +555,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
             // 2. Create Reveal Order
             let revealOrder = secureShuffle(playerIndices);
-            const lastFirstPlayer = prev.lastFirstPlayerIndex;
-
-            // Ensure first player is NOT an imposter and NOT the same as last time if possible
-            const nonImposterIndices = playerIndices.filter(i => !imposterIndices.includes(i));
-
-            // If the first person is an imposter, swap with a random non-imposter
-            if (imposterIndices.includes(revealOrder[0])) {
-                const targetIdx = secureRandom(nonImposterIndices.length);
-                const nonImposterToSwap = nonImposterIndices[targetIdx];
-                const currentPosInReveal = revealOrder.indexOf(nonImposterToSwap);
-                [revealOrder[0], revealOrder[currentPosInReveal]] = [revealOrder[currentPosInReveal], revealOrder[0]];
-            }
-
-            // If the first person is still the same as last time, try to swap with another non-imposter
-            if (revealOrder[0] === lastFirstPlayer && nonImposterIndices.length > 1) {
-                const otherNonImposters = nonImposterIndices.filter(i => i !== lastFirstPlayer);
-                const targetIdx = secureRandom(otherNonImposters.length);
-                const swapWith = otherNonImposters[targetIdx];
-                const currentPosInReveal = revealOrder.indexOf(swapWith);
-                [revealOrder[0], revealOrder[currentPosInReveal]] = [revealOrder[currentPosInReveal], revealOrder[0]];
-            }
 
             const playersWithNewRoles = prev.players.map((p, i) => ({
                 ...p,
@@ -628,7 +586,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
                 playerOrder,
                 revealOrder,
                 lastFirstPlayerIndex: revealOrder[0],
-                hintWord: null,
+                hintWord: prev.imposterWordMode === 'category_hint' ? randomCategory.name : null,
             };
         });
     }, [state.selectedCategories]);
@@ -644,6 +602,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             randomizeStartingPlayer: prev.randomizeStartingPlayer,
             imposterCount: prev.imposterCount,
             imposterWordMode: prev.imposterWordMode,
+            isVotingEnabled: prev.isVotingEnabled,
         }));
     }, []);
 
@@ -652,6 +611,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             ...initialState,
             customCategories: prev.customCategories,
             isLoadingCategories: prev.isLoadingCategories,
+            isVotingEnabled: prev.isVotingEnabled,
             phase: GamePhase.PLAYER_SETUP,
         }));
     }, []);
@@ -660,10 +620,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         const isImposter = state.imposterIndices.includes(playerIndex);
         if (isImposter) {
             switch (state.imposterWordMode) {
-                case 'no_word':
-                case 'hint_mode':
-                    return ''; // Will be handled in UI
-                case 'different_word':
+                case 'no_hint':
+                case 'category_hint':
+                case 'user_hint':
+                    return ''; // Handled in UI via hintWord or manual label
+                case 'hidden':
                 default:
                     return state.imposterWord;
             }
@@ -706,6 +667,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         nextRound,
         endGame,
         startNewGame,
+        setVotingEnabled,
         getPlayerWord,
         isPlayerImposter,
         getCurrentVoter,

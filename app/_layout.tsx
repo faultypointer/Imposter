@@ -64,15 +64,6 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="reveal"
-              options={{
-                presentation: 'transparentModal',
-                headerShown: false,
-                gestureEnabled: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
               name="game"
               options={{
                 presentation: 'modal',
