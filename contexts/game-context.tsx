@@ -196,7 +196,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     const removePlayer = useCallback((id: string) => {
         setState(prev => {
-            if (prev.players.length <= 3) return prev; // Min 3 players
             return {
                 ...prev,
                 players: prev.players.filter(p => p.id !== id)
@@ -637,6 +636,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const endGame = useCallback(() => {
         setState(prev => ({
             ...initialState,
+            customCategories: prev.customCategories,
+            isLoadingCategories: prev.isLoadingCategories,
             phase: GamePhase.SETUP, // Go to category selection, keep players
             players: prev.players.map(p => ({ ...p, score: 0, isImposter: false })),
             selectedCategories: prev.selectedCategories,
@@ -647,10 +648,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const startNewGame = useCallback(() => {
-        setState({
+        setState(prev => ({
             ...initialState,
+            customCategories: prev.customCategories,
+            isLoadingCategories: prev.isLoadingCategories,
             phase: GamePhase.PLAYER_SETUP,
-        });
+        }));
     }, []);
 
     const getPlayerWord = useCallback((playerIndex: number): string => {

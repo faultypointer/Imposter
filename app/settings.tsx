@@ -2,7 +2,9 @@
  * Game Settings Screen - Configure imposter modes and game options
  */
 
+import { Layout } from '@/constants/theme';
 import { ImposterWordMode, useGame } from '@/contexts/game-context';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
@@ -14,7 +16,7 @@ import {
     Surface,
     Switch,
     Text,
-    useTheme,
+    useTheme
 } from 'react-native-paper';
 
 export default function SettingsScreen() {
@@ -36,60 +38,92 @@ export default function SettingsScreen() {
     };
 
     return (
-        <Surface style={styles.container}>
+        <View style={styles.container}>
             <ScrollView
                 style={styles.scroll}
                 contentContainerStyle={styles.scrollContent}
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.headerTop}>
-                        <Text variant="headlineLarge" style={styles.title}>
-                            Settings
-                        </Text>
-                    </View>
-                    <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
-                        Configure your game experience
+                    <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
+                        Settings
+                    </Text>
+                    <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant, opacity: 0.8 }}>
+                        Configure your match experience
                     </Text>
                 </View>
                 {/* Imposter Word Mode Section */}
                 <List.Section>
-                    <List.Subheader>Imposter Word Display</List.Subheader>
-                    <RadioButton.Group
-                        onValueChange={handleWordModeChange}
-                        value={imposterWordMode}
-                    >
-                        <List.Item
-                            title="Show Different Word"
-                            description="Imposter sees a related but different word"
-                            left={props => <List.Icon {...props} icon="eye" />}
-                            right={() => (
-                                <RadioButton value="different_word" />
-                            )}
-                            onPress={() => handleWordModeChange('different_word')}
-                        />
-                        <Divider />
-                        <List.Item
-                            title="Show No Word"
-                            description="Imposter only knows they are the imposter"
-                            left={props => <List.Icon {...props} icon="eye-off" />}
-                            right={() => (
-                                <RadioButton value="no_word" />
-                            )}
-                            onPress={() => handleWordModeChange('no_word')}
-                        />
-                        <List.Item
-                            title="Show with Hint"
-                            description="Imposter sees title with a hint from a Townie"
-                            left={props => <List.Icon {...props} icon="lightbulb" />}
-                            right={() => (
-                                <RadioButton value="hint_mode" />
-                            )}
-                            onPress={() => handleWordModeChange('hint_mode')}
-                        />
-                    </RadioButton.Group>
-
-
+                    <List.Subheader style={{ color: theme.colors.primary, fontWeight: 'bold', letterSpacing: 0.5 }}>MATCH MODE</List.Subheader>
+                    <Surface style={{ borderRadius: 28, backgroundColor: theme.colors.surfaceVariant, overflow: 'hidden', marginTop: 8, padding: 10 }}>
+                        <RadioButton.Group
+                            onValueChange={(val) => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                handleWordModeChange(val);
+                            }}
+                            value={imposterWordMode}
+                        >
+                            <List.Item
+                                title="Show Different Word"
+                                titleStyle={{ fontWeight: '600' }}
+                                description="Imposter sees a related but different word"
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="eye-outline" />
+                                    </View>
+                                )}
+                                right={() => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="different_word" />
+                                    </View>
+                                )}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    handleWordModeChange('different_word');
+                                }}
+                            />
+                            <Divider horizontalInset />
+                            <List.Item
+                                title="Show No Word"
+                                titleStyle={{ fontWeight: '600' }}
+                                description="Imposter only knows they are the imposter"
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="eye-off-outline" />
+                                    </View>
+                                )}
+                                right={() => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="no_word" />
+                                    </View>
+                                )}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    handleWordModeChange('no_word');
+                                }}
+                            />
+                            <Divider horizontalInset />
+                            <List.Item
+                                title="Show with Hint"
+                                titleStyle={{ fontWeight: '600' }}
+                                description="Imposter sees title with a hint from a Townie"
+                                left={props => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <List.Icon {...props} icon="lightbulb-outline" />
+                                    </View>
+                                )}
+                                right={() => (
+                                    <View style={{ justifyContent: 'center' }}>
+                                        <RadioButton value="hint_mode" />
+                                    </View>
+                                )}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    handleWordModeChange('hint_mode');
+                                }}
+                            />
+                        </RadioButton.Group>
+                    </Surface>
                 </List.Section>
 
                 <Divider style={styles.sectionDivider} />
@@ -101,28 +135,34 @@ export default function SettingsScreen() {
                         <IconButton
                             icon="minus"
                             mode="contained-tonal"
-                            onPress={() => setImposterCount(imposterCount - 1)}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setImposterCount(imposterCount - 1);
+                            }}
                             disabled={imposterCount <= 1}
                         />
                         <View style={styles.countDisplay}>
-                            <Text variant="displaySmall">{imposterCount}</Text>
+                            <Text variant="displayLarge" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>{imposterCount}</Text>
                             <Text
-                                variant="bodySmall"
-                                style={{ color: theme.colors.onSurfaceVariant }}
+                                variant="labelLarge"
+                                style={{ color: theme.colors.onSurfaceVariant, fontWeight: 'bold' }}
                             >
-                                {imposterCount === 1 ? 'Imposter' : 'Imposters'}
+                                {imposterCount === 1 ? 'IMPOSTER' : 'IMPOSTERS'}
                             </Text>
                         </View>
                         <IconButton
                             icon="plus"
                             mode="contained-tonal"
-                            onPress={() => setImposterCount(imposterCount + 1)}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setImposterCount(imposterCount + 1);
+                            }}
                             disabled={imposterCount >= maxImposters}
                         />
                     </View>
                     <Text
                         variant="bodySmall"
-                        style={[styles.helperText, { color: theme.colors.onSurfaceVariant }]}
+                        style={[styles.helperText, { color: theme.colors.onSurfaceVariant, opacity: 0.7 }]}
                     >
                         Maximum {maxImposters} for {players.length} players
                     </Text>
@@ -132,36 +172,47 @@ export default function SettingsScreen() {
 
                 {/* Other Settings */}
                 <List.Section>
-                    <List.Subheader>Game Options</List.Subheader>
-                    <List.Item
-                        title="Randomize Starting Player"
-                        description="Randomly pick who speaks first each round"
-                        left={props => <List.Icon {...props} icon="shuffle" />}
-                        right={() => (
-                            <Switch
-                                value={randomizeStartingPlayer}
-                                onValueChange={setRandomizeStartingPlayer}
-                            />
-                        )}
-                    />
+                    <List.Subheader style={{ color: theme.colors.primary, fontWeight: 'bold', letterSpacing: 0.5 }}>MATCH OPTIONS</List.Subheader>
+                    <Surface style={{ borderRadius: 28, backgroundColor: theme.colors.surfaceVariant, overflow: 'hidden', marginTop: 8, padding: 10 }}>
+                        <List.Item
+                            title="Randomize Starting Player"
+                            description="Randomly pick who speaks first each round"
+                            titleStyle={{ fontWeight: '600' }}
+                            left={props => (
+                                <View style={{ justifyContent: 'center' }}>
+                                    <List.Icon {...props} icon="shuffle" />
+                                </View>
+                            )}
+                            right={() => (
+                                <Switch
+                                    value={randomizeStartingPlayer}
+                                    onValueChange={(val) => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        setRandomizeStartingPlayer(val);
+                                    }}
+                                />
+                            )}
+                        />
+                    </Surface>
                 </List.Section>
 
                 <View style={{ height: 100 }} />
             </ScrollView>
 
             {/* Done Button */}
-            <Surface style={styles.buttonContainer} elevation={4}>
+            <View style={styles.buttonContainer}>
                 <Button
                     mode="contained"
                     onPress={() => router.back()}
                     style={styles.doneButton}
                     contentStyle={styles.doneButtonContent}
+                    labelStyle={styles.doneButtonLabel}
                     icon="check"
                 >
                     Done
                 </Button>
-            </Surface>
-        </Surface>
+            </View>
+        </View>
     );
 }
 
@@ -210,16 +261,33 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         position: 'absolute',
-        bottom: 0,
+        bottom: Layout.floatingBar.bottom,
         left: 0,
         right: 0,
-        padding: 20,
-        paddingBottom: 34,
+        marginHorizontal: Layout.floatingBar.marginHorizontal,
+        height: Layout.floatingBar.height,
+        borderRadius: Layout.floatingBar.borderRadius,
+        backgroundColor: 'transparent',
+        shadowColor: '#000',
+        shadowOffset: Layout.floatingBar.shadowOffset,
+        shadowOpacity: Layout.floatingBar.shadowOpacity,
+        shadowRadius: Layout.floatingBar.shadowRadius,
     },
     doneButton: {
-        borderRadius: 12,
+        flex: 1,
+        borderRadius: 32,
+        height: '100%',
+        justifyContent: 'center',
     },
     doneButtonContent: {
-        paddingVertical: 8,
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row-reverse',
+    },
+    doneButtonLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
     },
 });

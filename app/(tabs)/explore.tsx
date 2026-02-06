@@ -14,8 +14,8 @@ import {
   Card,
   Dialog,
   FAB,
+  IconButton,
   Portal,
-  Surface,
   Text,
   TextInput,
   useTheme
@@ -121,15 +121,15 @@ export default function CategoriesScreen() {
 
   if (isLoadingCategories) {
     return (
-      <Surface style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 16 }}>Loading categories...</Text>
-      </Surface>
+      </View>
     );
   }
 
   return (
-    <Surface style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -137,10 +137,10 @@ export default function CategoriesScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text variant="headlineLarge" style={styles.title}>
+          <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
             Categories
           </Text>
-          <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+          <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant, opacity: 0.8 }}>
             Manage your custom word lists
           </Text>
         </View>
@@ -161,39 +161,48 @@ export default function CategoriesScreen() {
         ) : (
           <View style={styles.grid}>
             {customCategories.map((category) => (
-              <Card key={category.id} style={styles.card} mode="elevated">
-                <Card.Content>
-                  <View style={styles.cardHeader}>
-                    <Avatar.Icon
-                      size={48}
-                      icon={getCategoryIcon(category.icon)}
-                      style={{ backgroundColor: theme.colors.tertiaryContainer }}
+              <Card key={category.id} style={styles.card} mode="contained">
+                <Card.Content style={styles.cardContent}>
+                  <Avatar.Icon
+                    size={56}
+                    icon={getCategoryIcon(category.icon)}
+                    style={{ backgroundColor: theme.colors.tertiaryContainer }}
+                    color={theme.colors.onTertiaryContainer}
+                  />
+                  <View style={styles.categoryInfo}>
+                    <Text variant="titleLarge" style={styles.categoryName} numberOfLines={1}>
+                      {category.name}
+                    </Text>
+                    <View style={styles.badgeRow}>
+                      <View style={[styles.countBadge, { backgroundColor: theme.colors.secondaryContainer }]}>
+                        <Text variant="labelSmall" style={{ color: theme.colors.onSecondaryContainer, fontWeight: 'bold' }}>
+                          {category.words.length} WORDS
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.cardActions}>
+                    <IconButton
+                      icon="pencil-outline"
+                      mode="contained-tonal"
+                      onPress={() => showModal(category)}
+                      size={24}
+                    />
+                    <IconButton
+                      icon="delete-outline"
+                      mode="contained"
+                      containerColor={theme.colors.errorContainer}
+                      iconColor={theme.colors.onErrorContainer}
+                      onPress={() => confirmDelete(category)}
+                      size={24}
                     />
                   </View>
-                  <Text variant="titleMedium" style={styles.categoryName} numberOfLines={1}>
-                    {category.name}
-                  </Text>
-                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                    {category.words.length} words
-                  </Text>
                 </Card.Content>
-                <Card.Actions>
-                  <Button onPress={() => showModal(category)}>Edit</Button>
-                  <Button
-                    mode="contained"
-                    buttonColor="#D32F2F"
-                    textColor="white"
-                    icon="delete"
-                    onPress={() => confirmDelete(category)}
-                  >
-                    Delete
-                  </Button>
-                </Card.Actions>
               </Card>
             ))}
           </View>
         )}
-        <View style={{ height: 80 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       <FAB
@@ -232,8 +241,17 @@ export default function CategoriesScreen() {
             </ScrollView>
           </Dialog.ScrollArea>
           <Dialog.Actions>
-            <Button onPress={hideModal}>Cancel</Button>
-            <Button mode="contained" onPress={handleSave}>Save</Button>
+            <Button onPress={hideModal} labelStyle={styles.buttonLabel}>Cancel</Button>
+            <Button
+              mode="contained"
+              onPress={handleSave}
+              icon="check"
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              style={{ borderRadius: 28 }}
+            >
+              Save
+            </Button>
           </Dialog.Actions>
         </Dialog>
 
@@ -246,12 +264,23 @@ export default function CategoriesScreen() {
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
-            <Button textColor={theme.colors.error} onPress={handleDelete}>Delete</Button>
+            <Button onPress={() => setDeleteDialogVisible(false)} labelStyle={styles.buttonLabel}>Cancel</Button>
+            <Button
+              mode="contained"
+              buttonColor="#D32F2F"
+              textColor="white"
+              onPress={handleDelete}
+              icon="delete"
+              contentStyle={styles.buttonContent}
+              labelStyle={styles.buttonLabel}
+              style={{ borderRadius: 28 }}
+            >
+              Delete Permanently
+            </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </Surface>
+    </View>
   );
 }
 
@@ -296,28 +325,57 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 8,
+    borderRadius: 28,
+    backgroundColor: 'transparent',
   },
-  cardHeader: {
+  cardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+    alignItems: 'center',
+    padding: 16,
+  },
+  categoryInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
   categoryName: {
     fontWeight: 'bold',
-    marginBottom: 4,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  countBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 8,
   },
   fab: {
     position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+    right: 20,
+    bottom: 88 + 24, // Tab bar top (24+64) + Gap (24)
+    borderRadius: 20,
   },
   input: {
     marginBottom: 16,
+    borderRadius: 12,
   },
   textArea: {
     marginBottom: 8,
-    minHeight: 120, // ensure enough visual space
+    minHeight: 120,
+    borderRadius: 12,
+  },
+  buttonContent: {
+    height: 48,
+    flexDirection: 'row-reverse',
+    paddingHorizontal: 16,
+  },
+  buttonLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 });

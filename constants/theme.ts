@@ -144,3 +144,19 @@ export function getNavTheme(paperTheme: typeof MD3LightTheme) {
   };
 }
 
+/**
+ * Shared layout constants for consistent UI elements
+ */
+export const Layout = {
+  floatingBar: {
+    bottom: 24,
+    marginHorizontal: 20,
+    height: 54,
+    borderRadius: 16,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  }
+};
+
