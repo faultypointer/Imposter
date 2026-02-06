@@ -5,7 +5,6 @@
 
 import { GamePhase, useGame } from '@/contexts/game-context';
 import { PREDEFINED_CATEGORIES } from '@/data/game-data';
-import { useCustomCategories } from '@/hooks/use-custom-categories';
 import { Redirect, router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
@@ -50,11 +49,11 @@ export default function LobbyScreen() {
     imposterCount,
     imposterWordMode,
     endGame,
+    customCategories,
   } = useGame();
 
   const isGameActive = phase !== GamePhase.SETUP && phase !== GamePhase.PLAYER_SETUP;
 
-  const { customCategories } = useCustomCategories();
   const allCategories = [...PREDEFINED_CATEGORIES, ...customCategories];
 
   // Redirect to player setup if no players

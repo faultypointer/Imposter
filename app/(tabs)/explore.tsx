@@ -3,13 +3,12 @@
  * Uses React Native Paper with Material You design
  */
 
+import { useGame } from '@/contexts/game-context';
 import { type Category as CategoryType } from '@/data/game-data';
-import { useCustomCategories } from '@/hooks/use-custom-categories';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
-  Appbar,
   Avatar,
   Button,
   Card,
@@ -46,7 +45,13 @@ function getCategoryIcon(emoji: string): string {
 
 export default function CategoriesScreen() {
   const theme = useTheme();
-  const { customCategories, addCategory, updateCategory, removeCategory, isLoading } = useCustomCategories();
+  const {
+    customCategories,
+    addCategory,
+    updateCategory,
+    removeCategory,
+    isLoadingCategories
+  } = useGame();
 
   const [visible, setVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryType | null>(null);
@@ -114,7 +119,7 @@ export default function CategoriesScreen() {
     hideModal();
   };
 
-  if (isLoading) {
+  if (isLoadingCategories) {
     return (
       <Surface style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" />
@@ -125,15 +130,20 @@ export default function CategoriesScreen() {
 
   return (
     <Surface style={styles.container}>
-      <Appbar.Header elevated>
-        <Appbar.Content title="Custom Categories" />
-      </Appbar.Header>
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text variant="headlineLarge" style={styles.title}>
+            Categories
+          </Text>
+          <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+            Manage your custom word lists
+          </Text>
+        </View>
         {customCategories.length === 0 ? (
           <View style={styles.emptyState}>
             <Avatar.Icon
@@ -257,7 +267,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
+    paddingTop: 60,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   emptyState: {
     alignItems: 'center',
